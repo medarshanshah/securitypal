@@ -3,11 +3,11 @@ import ChatbotInterface from './components/ChatbotInterface';
 import QAManagement from './components/QAManagement';
 import Login from './components/Login';
 import { AuthProvider, useAuth } from './components/AuthContext';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'chatbot' | 'qa'>('chatbot');
+  const [activeTab, setActiveTab] = useState('chatbot');
   const { token, logout } = useAuth();
 
   if (!token) {

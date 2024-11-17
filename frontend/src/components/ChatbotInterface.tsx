@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuth } from './AuthContext';
+import { toast } from 'react-toastify';
 
 interface Message {
   text: string;
@@ -15,6 +17,8 @@ export default function ChatbotInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sources, setSources] = useState<Source[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { token } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,12 +27,14 @@ export default function ChatbotInterface() {
     const userMessage: Message = { text: input, isUser: true };
     setMessages([...messages, userMessage]);
     setInput('');
+    setIsLoading(true);
 
     try {
       const response = await fetch('http://localhost:8000/api/chatbot/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify({ question: input }),
       });
@@ -43,8 +49,11 @@ export default function ChatbotInterface() {
       setSources(data.sources);
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error processing your request. Please try again.');
       const errorMessage: Message = { text: 'Sorry, there was an error processing your request.', isUser: false };
       setMessages(prevMessages => [...prevMessages, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,6 +67,11 @@ export default function ChatbotInterface() {
             </span>
           </div>
         ))}
+        {isLoading && (
+          <div className="text-center">
+            <span className="inline-block p-2 rounded bg-gray-200">Thinking...</span>
+          </div>
+        )}
       </div>
       <form onSubmit={handleSubmit} className="flex">
         <input
@@ -67,7 +81,9 @@ export default function ChatbotInterface() {
           className="flex-grow mr-2 p-2 border rounded"
           placeholder="Type your question here..."
         />
-        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">Send</button>
+        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded" disabled={isLoading}>
+          {isLoading ? 'Sending...' : 'Send'}
+        </button>
       </form>
       {sources.length > 0 && (
         <div className="mt-4">
@@ -76,7 +92,7 @@ export default function ChatbotInterface() {
             <div key={index} className="mb-2 p-2 border rounded">
               <p><strong>Q: {source.question}</strong></p>
               <p>A: {source.answer}</p>
-              <p className="text-sm text-gray-500">Relevance Score: {source.relevance_score}</p>
+              <p className="text-sm text-gray-500">Relevance Score: {source.relevance_score.toFixed(4)}</p>
             </div>
           ))}
         </div>
