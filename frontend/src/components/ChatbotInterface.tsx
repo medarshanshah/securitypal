@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
-
-interface Message {
-  text: string;
-  isUser: boolean;
-}
-
-interface Source {
-  question: string;
-  answer: string;
-  relevance_score: number;
-}
+import { Message, Source } from '../types';
+import { Transition } from '@headlessui/react';
+import { Send, Loader } from 'lucide-react';
 
 export default function ChatbotInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -58,43 +50,68 @@ export default function ChatbotInterface() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
-      <div className="flex-grow overflow-y-auto mb-4 p-4 border rounded">
+    <div className="flex flex-col h-[calc(100vh-200px)] bg-gray-100">
+      <div className="flex-grow overflow-y-auto mb-4 p-4 space-y-4">
         {messages.map((message, index) => (
-          <div key={index} className={`mb-2 ${message.isUser ? 'text-right' : 'text-left'}`}>
-            <span className={`inline-block p-2 rounded ${message.isUser ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-              {message.text}
-            </span>
-          </div>
+          <Transition
+            key={index}
+            show={true}
+            enter="transition-opacity duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+          >
+            <div className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-3/4 p-3 rounded-lg ${
+                message.isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
+              }`}>
+                {message.text}
+              </div>
+            </div>
+          </Transition>
         ))}
         {isLoading && (
-          <div className="text-center">
-            <span className="inline-block p-2 rounded bg-gray-200">Thinking...</span>
+          <div className="flex justify-center">
+            <Loader className="animate-spin text-blue-500" size={24} />
           </div>
         )}
       </div>
-      <form onSubmit={handleSubmit} className="flex">
+      <form onSubmit={handleSubmit} className="flex items-center bg-white p-4 rounded-lg shadow-md">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-grow mr-2 p-2 border rounded"
+          className="flex-grow mr-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Type your question here..."
         />
-        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded" disabled={isLoading}>
-          {isLoading ? 'Sending...' : 'Send'}
+        <button 
+          type="submit" 
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+          disabled={isLoading}
+        >
+          {isLoading ? <Loader className="animate-spin" size={20} /> : <Send size={20} />}
+          <span className="sr-only">Send</span>
         </button>
       </form>
       {sources.length > 0 && (
-        <div className="mt-4">
-          <h3 className="font-bold mb-2">Relevant Sources:</h3>
-          {sources.map((source, index) => (
-            <div key={index} className="mb-2 p-2 border rounded">
-              <p><strong>Q: {source.question}</strong></p>
-              <p>A: {source.answer}</p>
-              <p className="text-sm text-gray-500">Relevance Score: {source.relevance_score.toFixed(4)}</p>
-            </div>
-          ))}
+        <div className="mt-4 bg-white p-4 rounded-lg shadow-md">
+          <h3 className="font-bold mb-2 text-lg">Relevant Sources:</h3>
+          <div className="space-y-2">
+            {sources.map((source, index) => (
+              <Transition
+                key={index}
+                show={true}
+                enter="transition-opacity duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+              >
+                <div className="border border-gray-200 rounded-md p-3">
+                  <p className="font-semibold">Q: {source.question}</p>
+                  <p className="mt-1">A: {source.answer}</p>
+                  <p className="text-sm text-gray-500 mt-1">Relevance Score: {source.relevance_score.toFixed(4)}</p>
+                </div>
+              </Transition>
+            ))}
+          </div>
         </div>
       )}
     </div>
